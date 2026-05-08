@@ -1,0 +1,8 @@
+streamlit
+yfinance
+pandas
+langchain-openai
+pypdf
+streamlit-option-menu
+streamlit-lottie
+requests
