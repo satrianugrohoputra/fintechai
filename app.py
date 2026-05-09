@@ -198,6 +198,65 @@ if menu_choice == "Stock Analysis":
 elif menu_choice == "PDF Report Analyzer":
     st.header("📄 Financial Report Scanner")
     st.markdown("The **Keyword Hunter** algorithm will select the most relevant pages from the Annual Report.")
+    
+    uploaded_file = st.file_uploader("Upload financial document (PDF)", type="pdf")
+    user_question = st.text_input("What do you want to know from this report?", "Please provide a summary of profit and revenue from this document.")
+    
+    if uploaded_file and st.button("Start Document Breakdown", type="primary"):
+        anim_placeholder = st.empty()
+        with anim_placeholder.container():
+            if lottie_thinking: st_lottie(lottie_thinking, height=150, key="loading_pdf")
+            st.markdown("<h5 style='text-align:center; color:#00FFA3;'>Extracting and reading document...</h5>", unsafe_allow_html=True)
+            
+        try:
+            pdf_reader = PdfReader(uploaded_file)
+            teks_dokumen = ""
+            kata_kunci = ["profit", "revenue", "risk", "prospect", "asset", "liability", "loss", "income", "laba", "pendapatan"]
+            halaman_ditemukan = 0
+            
+            for i, page in enumerate(pdf_reader.pages):
+                teks_halaman = page.extract_text()
+                if teks_halaman and any(k in teks_halaman.lower() for k in kata_kunci):
+                    teks_dokumen += f"--- PAGE {i+1} ---\n{teks_halaman}\n\n"
+                    halaman_ditemukan += 1
+                if halaman_ditemukan >= 15: break
+            
+            if halaman_ditemukan == 0:
+                anim_placeholder.empty()
+                st.warning("⚠️ Standard financial format not detected. Switching to General Extraction Mode...")
+                total_pages = len(pdf_reader.pages)
+                sampel_awal = list(range(min(3, total_pages)))
+                sampel_tengah = list(range(max(3, total_pages//2), min(total_pages, (total_pages//2) + 3)))
+                
+                for i in sorted(list(set(sampel_awal + sampel_tengah))):
+                    teks_dokumen += f"--- PAGE {i+1} ---\n{pdf_reader.pages[i].extract_text()}\n\n"
+                
+                prompt_aktif = ChatPromptTemplate.from_messages([
+                    ("system", "You are a Professional Document Analyst. Summarize the text to answer the question. CRITICAL RULE: If the text is completely unrelated to business/finance, REJECT it by stating: 'The provided document is not suitable. Please upload a financial document.'"),
+                    ("user", "Document:\n{dokumen}\n\nQuestion: {pertanyaan}")
+                ])
+            else:
+                anim_placeholder.empty()
+                st.success(f"Successfully extracted {halaman_ditemukan} crucial pages.")
+                prompt_aktif = ChatPromptTemplate.from_messages([
+                    ("system", "You are a Senior Financial Auditor. Answer the user's question accurately based ONLY on the provided text. Use bullet points."),
+                    ("user", "Document:\n{dokumen}\n\nQuestion: {pertanyaan}")
+                ])
+                
+            jawaban_pdf = (prompt_aktif | llm).invoke({"dokumen": teks_dokumen, "pertanyaan": user_question})
+            
+            st.markdown(f'<div class="ai-card"><h4>🤖 Auditor\'s Verdict</h4>{jawaban_pdf.content}</div>', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.download_button("📥 Download PDF Breakdown (.txt)", jawaban_pdf.content, "PDF_Breakdown.txt", mime="text/plain")
+
+        except Exception as e:
+            anim_placeholder.empty()
+            st.error(f"⚠️ Failed to analyze PDF. Ensure your AMD server is ON! Error: {e}")
+
+elif menu_choice == "Portfolio Advisor":
+    st.header("💼 AI Portfolio Advisor")
+    st.markdown("Enter your current stock positions to get an objective performance analysis and personalized action plan from our AI.")
+    
     st.markdown('<div class="ai-card">', unsafe_allow_html=True)
     
     with st.form("portfolio_form"):
@@ -205,11 +264,10 @@ elif menu_choice == "PDF Report Analyzer":
         
         col1, col2, col3 = st.columns(3)
         with col1:
-            ticker = st.text_input("Stock Ticker (e.g., AAPL, BBCA.JK)", "BRPT.JK")
+            ticker = st.text_input("Stock Ticker (e.g., AAPL, BRPT.JK)", "BRPT.JK")
         with col2:
             avg_price = st.number_input("Average Buy Price", min_value=1.0, value=4000.0, step=10.0)
         with col3:
-            # Labelnya diperjelas
             shares = st.number_input("Number of Lots / Shares", min_value=1, value=5, step=1)
             
         st.markdown("<br>", unsafe_allow_html=True)
@@ -226,7 +284,6 @@ elif menu_choice == "PDF Report Analyzer":
         
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- LOGIKA SAAT TOMBOL DITEKAN ---
     if submit_advisor:
         anim_placeholder = st.empty()
         with anim_placeholder.container():
@@ -243,11 +300,9 @@ elif menu_choice == "PDF Report Analyzer":
             else:
                 current_price = hist['Close'].iloc[-1]
                 
-                # --- LOGIKA CERDAS MATA UANG & LOT ---
                 is_indo = ticker.endswith(".JK")
                 mata_uang = "Rp" if is_indo else "$"
                 pengali_lembar = 100 if is_indo else 1 
-                
                 total_lembar = shares * pengali_lembar
                 
                 initial_capital = avg_price * total_lembar
@@ -257,13 +312,11 @@ elif menu_choice == "PDF Report Analyzer":
                 
                 status = "Floating Profit" if pnl_amount > 0 else "Floating Loss"
                 
-                anim_placeholder.empty() # Matikan animasi
+                anim_placeholder.empty() 
                 
-                # TAMPILAN DASHBOARD P&L
                 st.subheader("📊 Position Summary")
                 m1, m2, m3, m4 = st.columns(4)
                 
-                # Format angka: Tanpa desimal (,0f) untuk Rupiah agar lebih rapi
                 m1.metric("Current Price", f"{mata_uang} {current_price:,.0f}")
                 m2.metric("Total Investment", f"{mata_uang} {initial_capital:,.0f}")
                 m3.metric("Current Value", f"{mata_uang} {current_value:,.0f}")
@@ -271,7 +324,6 @@ elif menu_choice == "PDF Report Analyzer":
                 
                 st.divider()
                 
-                # PROMPT UNTUK AI
                 prompt_advisor = ChatPromptTemplate.from_messages([
                     ("system", """You are a highly skilled, objective Professional Financial Advisor. 
                     Analyze the user's current stock position. 
@@ -290,22 +342,15 @@ elif menu_choice == "PDF Report Analyzer":
                     Give me your recommendation.""")
                 ])
                 
-                # Panggil LLM Qwen di Server AMD
                 jawaban_advisor = (prompt_advisor | llm).invoke({})
                 
-                # --- BAGIAN INI YANG MEMUNCULKAN TEKS AI ---
                 st.markdown(f'<div class="ai-card"><h4>🤖 Advisor\'s Verdict</h4>{jawaban_advisor.content}</div>', unsafe_allow_html=True)
-                
                 st.markdown("<br>", unsafe_allow_html=True)
                 st.download_button("📥 Download Advice (.txt)", jawaban_advisor.content, f"Portfolio_Advice_{ticker}.txt", mime="text/plain")
 
         except Exception as e:
             anim_placeholder.empty()
-            # Pesan error diubah agar lebih jelas
-            st.error(f"⚠️ Failed to generate AI analysis. Ensure your AMD server is powered ON! (Error details: {e})")
-        except Exception as e:
-            anim_placeholder.empty()
-            st.error(f"Failed to analyze portfolio. Error: {e}")
+            st.error(f"⚠️ Failed to generate AI analysis. Ensure your AMD server is ON! Error: {e}")
             
 # --- FOOTER DISCLAIMER ---
 st.markdown("---")
