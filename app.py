@@ -115,6 +115,63 @@ with st.sidebar:
 if menu_choice == "Stock Analysis":
     st.header("📊 Sentiment & Technical Analysis")
     
+    # --- FUNGSI PENARIK DATA PASAR GLOBAL (Ditaruh sebelum blok UI) ---
+@st.cache_data(ttl=300) # Cache 5 menit agar aplikasi tidak lambat/spamming request
+def get_global_market_pulse():
+    # Simbol resmi di Yahoo Finance
+    tickers = {
+        "S&P 500": "^GSPC",
+        "NASDAQ": "^IXIC",
+        "BTC/USD": "BTC-USD",
+        "Gold": "GC=F"
+    }
+    data = {}
+    for name, symbol in tickers.items():
+        try:
+            t = yf.Ticker(symbol)
+            hist = t.history(period="2d") # Tarik data 2 hari untuk hitung persentase (+/-)
+            if len(hist) >= 2:
+                harga_sekarang = hist['Close'].iloc[-1]
+                harga_kemarin = hist['Close'].iloc[-2]
+                persentase = ((harga_sekarang - harga_kemarin) / harga_kemarin) * 100
+                data[name] = {"val": harga_sekarang, "pct": persentase}
+            else:
+                data[name] = None
+        except:
+            data[name] = None # Jika error (misal internet mati), kembalikan None
+    return data
+
+# --- MINI MARKET DASHBOARD UI ---
+st.markdown("##### 🌐 Global Market Pulse")
+
+# Panggil fungsi penarik data
+market_data = get_global_market_pulse()
+
+m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+
+# Fungsi kecil untuk merender metrik agar kodenya tidak panjang
+def render_metric(col, name, prefix=""):
+    info = market_data.get(name)
+    if info is not None:
+        # Jika berhasil narik data, tampilkan angkanya
+        val_str = f"{prefix}{info['val']:,.2f}"
+        pct_str = f"{info['pct']:.2f}%"
+        col.metric(label=name, value=val_str, delta=pct_str)
+    else:
+        # Jika gagal/error, tampilkan N/A tapi nama aset (label) tetap ada
+        col.metric(label=name, value="N/A", delta="N/A", delta_color="off")
+
+# Render ke 4 kolom
+render_metric(m_col1, "S&P 500")
+render_metric(m_col2, "NASDAQ")
+render_metric(m_col3, "BTC/USD", prefix="$")
+render_metric(m_col4, "Gold", prefix="$")
+
+st.markdown("<br>", unsafe_allow_html=True) # Jarak kosong
+
+# --- TRENDING TICKERS SUGGESTION ---
+st.caption("🔥 **Trending today:** AAPL, NVDA, TSLA, MSFT, BBCA.JK")
+    
     col_input, col_btn = st.columns([3, 1])
     with col_input:
         ticker_input = st.text_input("Stock Ticker (e.g., BBCA.JK, AAPL):", "BBCA.JK")
@@ -247,4 +304,10 @@ elif menu_choice == "PDF Report Analyzer":
         except Exception as e:
             anim_placeholder.empty()
             st.error(f"An error occurred while reading the PDF: {e}")
+            
+# --- FOOTER DISCLAIMER ---
+st.markdown("---")
+st.caption("""
+**⚠️ Disclaimer:** FintechAI is an AI-powered experimental tool. All generated analysis, portfolio advice, and market predictions are for informational and educational purposes only. They do not constitute financial, investment, or trading advice. Always do your own research (DYOR) before making any investment decisions.
+""")
             
