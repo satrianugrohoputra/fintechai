@@ -306,7 +306,7 @@ elif menu_choice == "PDF Report Analyzer":
             anim_placeholder.empty()
             st.error(f"An error occurred while reading the PDF: {e}")
             
-elif pilihan_menu == "Portfolio Advisor":
+elif menu_choice == "Portfolio Advisor":
     st.header("💼 AI Portfolio Advisor")
     st.markdown("Enter your current stock positions to get an objective performance analysis and personalized action plan from our AI.")
     
