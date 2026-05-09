@@ -172,14 +172,14 @@ st.markdown("<br>", unsafe_allow_html=True) # Jarak kosong
 # --- TRENDING TICKERS SUGGESTION ---
 st.caption("🔥 **Trending today:** AAPL, NVDA, TSLA, MSFT, BBCA.JK")
     
-    col_input, col_btn = st.columns([3, 1])
-    with col_input:
+col_input, col_btn = st.columns([3, 1])
+with col_input:
         ticker_input = st.text_input("Stock Ticker (e.g., BBCA.JK, AAPL):", "BBCA.JK")
-    with col_btn:
+with col_btn:
         st.markdown("<br>", unsafe_allow_html=True) # Spacer
         analyze_button = st.button("Run Analysis", type="primary", use_container_width=True)
         
-    if analyze_button:
+if analyze_button:
         anim_placeholder = st.empty()
         with anim_placeholder.container():
             if lottie_thinking: st_lottie(lottie_thinking, height=150, key="loading_stock")
