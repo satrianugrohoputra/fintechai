@@ -111,8 +111,8 @@ with st.sidebar:
     )
 
     # --- FUNGSI PENARIK DATA PASAR GLOBAL (Ditaruh sebelum blok UI) ---
-@st.cache_data(ttl=300) # Cache 5 menit agar aplikasi tidak lambat/spamming request
-def get_global_market_pulse():
+    @st.cache_data(ttl=300) # Cache 5 menit agar aplikasi tidak lambat/spamming request
+    def get_global_market_pulse():
     # Simbol resmi di Yahoo Finance
     tickers = {
         "S&P 500": "^GSPC",
