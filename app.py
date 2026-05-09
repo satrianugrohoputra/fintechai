@@ -109,13 +109,7 @@ with st.sidebar:
             "nav-link-selected": {"background-color": "#1E293B", "color": "#00FFA3", "font-weight": "bold", "border-left": "4px solid #00FFA3"},
         }
     )
-    
 
-# --- 6. MAIN PAGE LOGIC ---
-
-if menu_choice == "Stock Analysis":
-    st.header("📊 Sentiment & Technical Analysis")
-    
     # --- FUNGSI PENARIK DATA PASAR GLOBAL (Ditaruh sebelum blok UI) ---
 @st.cache_data(ttl=300) # Cache 5 menit agar aplikasi tidak lambat/spamming request
 def get_global_market_pulse():
@@ -142,6 +136,10 @@ def get_global_market_pulse():
             data[name] = None # Jika error (misal internet mati), kembalikan None
     return data
 
+# --- 6. MAIN PAGE LOGIC ---
+if menu_choice == "Stock Analysis":
+    st.header("📊 Sentiment & Technical Analysis")
+    
 # --- MINI MARKET DASHBOARD UI ---
 st.markdown("##### 🌐 Global Market Pulse")
 
