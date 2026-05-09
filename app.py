@@ -8,10 +8,10 @@ from streamlit_option_menu import option_menu
 from streamlit_lottie import st_lottie
 import requests
 
-# --- 1. PENGATURAN HALAMAN ---
+# --- 1. PAGE CONFIGURATION ---
 st.set_page_config(page_title="FintechAI - Dashboard", page_icon="📈", layout="wide", initial_sidebar_state="expanded")
 
-# --- 2. FUNGSI UNTUK ANIMASI LOTTIE ---
+# --- 2. LOTTIE ANIMATION FUNCTION ---
 def load_lottieurl(url):
     try:
         r = requests.get(url)
@@ -21,21 +21,21 @@ def load_lottieurl(url):
     except:
         return None
 
-# Load animasi "AI Thinking"
+# Load "AI Thinking" animation
 lottie_thinking = load_lottieurl("https://lottie.host/786bd49b-7cc2-4df7-873d-9d41315fc472/rJ4w2A61qK.json") 
 
-# --- 3. KONEKSI KE SERVER AMD ---
+# --- 3. AMD SERVER CONNECTION ---
 @st.cache_resource
 def init_llm():
     return ChatOpenAI(
-        base_url="http://165.245.143.132:8000/v1", # PASTIKAN IP INI BENAR
-        api_key="kosong", 
+        base_url="http://165.245.143.132:8000/v1", # ENSURE THIS IP IS CORRECT
+        api_key="empty", 
         model="Qwen/Qwen2.5-1.5B-Instruct",
         max_tokens=1200
     )
 llm = init_llm()
 
-# --- 4. INJEKSI CSS (HERO BANNER & CARD AI) ---
+# --- 4. CSS INJECTION (HERO BANNER & AI CARD) ---
 custom_css = """
 <style>
     .hero-banner {
@@ -64,7 +64,7 @@ custom_css = """
 hero_html = """
 <div class="hero-banner">
     <h1 class="app-title">FintechAI</h1>
-    <p class="app-subtitle">Sistem Analitik Finansial Otonom dengan Komputasi Edge GPU</p>
+    <p class="app-subtitle">Autonomous Financial Analytics System with Edge GPU Computing</p>
     <div class="terminal-window">
         <div class="terminal-header"><div class="t-dot red"></div><div class="t-dot yellow"></div><div class="t-dot green"></div></div>
         <div class="terminal-body"><span class="cmd-user">root@amd-server:~#</span> ./start_fintech_engine.sh<br><span class="cmd-text">[INFO] Initializing Qwen-1.5B on MI300X... OK</span><br><span class="cmd-user">root@amd-server:~#</span> Awaiting command<span class="cursor"></span></div>
@@ -75,17 +75,17 @@ st.markdown(custom_css + hero_html, unsafe_allow_html=True)
 
 # --- 5. SIDEBAR MENU ---
 with st.sidebar:
-    # 1. Menampilkan gambar landscape bbtech.jpg Anda
+    # 1. Display your landscape image bbtech.jpg
     try:
-        # Parameter use_container_width akan membuat gambar otomatis menyesuaikan lebar sidebar
+        # The use_container_width parameter will automatically adjust the image to the sidebar width
         st.image("bbtech.jpg", use_container_width=True)
     except:
-        # Jika gambar belum ada di folder, beri pesan sementara
-        st.caption("*(Gambar bbtech.jpg belum ditaruh di folder proyek)*")
+        # If the image is not in the project folder, display a temporary message
+        st.caption("*(bbtech.jpg image has not been placed in the project folder)*")
     
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 2. Trik menyulap Logo AMD Hitam menjadi Putih menggunakan CSS Filter
+    # 2. Trick to turn the Black AMD Logo White using CSS Filter
     st.markdown(
         """
         <div style="text-align: center; margin-bottom: 20px;">
@@ -96,10 +96,10 @@ with st.sidebar:
         unsafe_allow_html=True
     )
     
-    # 3. Menu Navigasi dengan warna baru
-    pilihan_menu = option_menu(
-        menu_title=None, # Dihilangkan agar lebih clean karena sudah ada gambar bbtech
-        options=["Analisis Saham", "Bedah PDF Laporan"],
+    # 3. Navigation Menu with new colors
+    menu_choice = option_menu(
+        menu_title=None, # Removed to keep it clean since the bbtech image is already present
+        options=["Stock Analysis", "PDF Report Analyzer"],
         icons=["graph-up-arrow", "file-earmark-pdf"],
         menu_icon="cast", default_index=0,
         styles={
@@ -110,141 +110,141 @@ with st.sidebar:
         }
     )
 
-# --- 6. LOGIKA HALAMAN UTAMA ---
+# --- 6. MAIN PAGE LOGIC ---
 
-if pilihan_menu == "Analisis Saham":
-    st.header("📊 Analisis Sentimen & Teknikal")
+if menu_choice == "Stock Analysis":
+    st.header("📊 Sentiment & Technical Analysis")
     
     col_input, col_btn = st.columns([3, 1])
     with col_input:
-        ticker_input = st.text_input("Kode Saham (contoh: BBCA.JK, AAPL):", "BBCA.JK")
+        ticker_input = st.text_input("Stock Ticker (e.g., BBCA.JK, AAPL):", "BBCA.JK")
     with col_btn:
         st.markdown("<br>", unsafe_allow_html=True) # Spacer
-        tombol_analisis = st.button("Jalankan Analisis", type="primary", use_container_width=True)
+        analyze_button = st.button("Run Analysis", type="primary", use_container_width=True)
         
-    if tombol_analisis:
+    if analyze_button:
         anim_placeholder = st.empty()
         with anim_placeholder.container():
-            if lottie_thinking: st_lottie(lottie_thinking, height=150, key="loading_saham")
-            st.markdown("<h5 style='text-align:center; color:#00E676;'>Menarik data pasar dan sentimen berita...</h5>", unsafe_allow_html=True)
+            if lottie_thinking: st_lottie(lottie_thinking, height=150, key="loading_stock")
+            st.markdown("<h5 style='text-align:center; color:#00E676;'>Pulling market data and news sentiment...</h5>", unsafe_allow_html=True)
             
         try:
-            saham = yf.Ticker(ticker_input)
-            hist = saham.history(period="1mo")
+            stock = yf.Ticker(ticker_input)
+            hist = stock.history(period="1mo")
             
             if hist.empty:
                 anim_placeholder.empty()
-                st.error("Data saham tidak ditemukan. Pastikan kode benar.")
+                st.error("Stock data not found. Ensure the ticker is correct.")
             else:
-                # Perhitungan Metrik
-                harga_terakhir = hist['Close'].iloc[-1]
-                harga_awal_bulan = hist['Close'].iloc[0]
-                harga_tertinggi = hist['High'].max()
-                harga_terendah = hist['Low'].min()
-                perubahan = harga_terakhir - harga_awal_bulan
-                persentase = (perubahan / harga_awal_bulan) * 100
-                tren = "Bullish (Naik)" if harga_terakhir > harga_awal_bulan else "Bearish (Turun)"
+                # Metrics Calculation
+                last_price = hist['Close'].iloc[-1]
+                month_open_price = hist['Close'].iloc[0]
+                high_price = hist['High'].max()
+                low_price = hist['Low'].min()
+                price_change = last_price - month_open_price
+                percentage = (price_change / month_open_price) * 100
+                trend = "Bullish (Up)" if last_price > month_open_price else "Bearish (Down)"
                 
-                # Tarik Berita
-                berita = saham.news[:3] if hasattr(saham, 'news') else []
-                teks_berita = "\n".join([f"- {b['title']}" for b in berita]) if berita else "Tidak ada berita terbaru."
+                # Fetch News
+                news = stock.news[:3] if hasattr(stock, 'news') else []
+                news_text = "\n".join([f"- {b['title']}" for b in news]) if news else "No recent news available."
                 
-                anim_placeholder.empty() # Hapus animasi
+                anim_placeholder.empty() # Remove animation
                 
-                # UI Dashboard Eksekutif
+                # Executive Dashboard UI
                 col_m1, col_m2, col_m3 = st.columns(3)
-                col_m1.metric("Harga Saat Ini", f"{harga_terakhir:.2f}", f"{perubahan:.2f} ({persentase:.2f}%)")
-                col_m2.metric("Resistance (Tertinggi)", f"{harga_tertinggi:.2f}")
-                col_m3.metric("Support (Terendah)", f"{harga_terendah:.2f}")
+                col_m1.metric("Current Price", f"{last_price:.2f}", f"{price_change:.2f} ({percentage:.2f}%)")
+                col_m2.metric("Resistance (High)", f"{high_price:.2f}")
+                col_m3.metric("Support (Low)", f"{low_price:.2f}")
                 
                 # Progress Bar
-                st.caption("📍 Posisi Harga Saat Ini (Support ↔ Resistance)")
-                rentang_harga = harga_tertinggi - harga_terendah
-                posisi_persen = (harga_terakhir - harga_terendah) / rentang_harga if rentang_harga > 0 else 0.5
-                st.progress(float(max(0, min(1, posisi_persen))))
+                st.caption("📍 Current Price Position (Support ↔ Resistance)")
+                price_range = high_price - low_price
+                percent_position = (last_price - low_price) / price_range if price_range > 0 else 0.5
+                st.progress(float(max(0, min(1, percent_position))))
                 
-                # Berita & Chart
-                with st.expander("📰 Sentimen Pasar Saat Ini (Berita Terbaru)", expanded=True):
-                    st.write(teks_berita)
+                # News & Chart
+                with st.expander("📰 Current Market Sentiment (Latest News)", expanded=True):
+                    st.write(news_text)
                 st.line_chart(hist['Close'])
                 
-                # Pemanggilan AI
-                data_ringkas = f"Kode: {ticker_input}\nHarga: {harga_terakhir:.2f}\nSupport: {harga_terendah:.2f}\nResistance: {harga_tertinggi:.2f}\nTren: {tren}\nBerita:\n{teks_berita}"
+                # AI Invocation
+                summary_data = f"Ticker: {ticker_input}\nPrice: {last_price:.2f}\nSupport: {low_price:.2f}\nResistance: {high_price:.2f}\nTrend: {trend}\nNews:\n{news_text}"
                 prompt_template = ChatPromptTemplate.from_messages([
-                    ("system", "Kamu analis saham profesional. Berikan analisis tren, dampak berita, dan saran ENTRY yang aman (jika bullish). Gunakan bahasa Indonesia."),
-                    ("user", "Data Pasar:\n{data}")
+                    ("system", "You are a professional stock analyst. Provide trend analysis, news impact, and safe ENTRY suggestions (if bullish). Use English."),
+                    ("user", "Market Data:\n{data}")
                 ])
-                jawaban = (prompt_template | llm).invoke({"data": data_ringkas})
+                response = (prompt_template | llm).invoke({"data": summary_data})
                 
                 # Output Card
-                st.markdown(f'<div class="ai-card"><h4>🤖 Analisis FintechAI</h4>{jawaban.content}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="ai-card"><h4>🤖 FintechAI Analysis</h4>{response.content}</div>', unsafe_allow_html=True)
                 st.markdown("<br>", unsafe_allow_html=True)
-                st.download_button("📥 Unduh Laporan Saham (.txt)", jawaban.content, f"Laporan_{ticker_input}.txt", mime="text/plain")
+                st.download_button("📥 Download Stock Report (.txt)", response.content, f"Report_{ticker_input}.txt", mime="text/plain")
                 
         except Exception as e:
             anim_placeholder.empty()
-            st.error(f"Terjadi kesalahan: {e}")
+            st.error(f"An error occurred: {e}")
 
-elif pilihan_menu == "Bedah PDF Laporan":
-    st.header("📄 Pemindai Laporan Finansial")
-    st.markdown("Algoritma **Keyword Hunter** akan menyeleksi halaman paling relevan dari Annual Report.")
+elif menu_choice == "PDF Report Analyzer":
+    st.header("📄 Financial Report Scanner")
+    st.markdown("The **Keyword Hunter** algorithm will select the most relevant pages from the Annual Report.")
     
-    uploaded_file = st.file_uploader("Upload dokumen keuangan (PDF)", type="pdf")
-    pertanyaan_user = st.text_input("Apa yang ingin kamu ketahui dari laporan ini?", "Tolong buatkan ringkasan laba dan pendapatan dari dokumen ini.")
+    uploaded_file = st.file_uploader("Upload financial document (PDF)", type="pdf")
+    user_question = st.text_input("What do you want to know from this report?", "Please provide a summary of profit and revenue from this document.")
     
-    if uploaded_file and st.button("Mulai Bedah Dokumen", type="primary"):
+    if uploaded_file and st.button("Start Document Breakdown", type="primary"):
         anim_placeholder = st.empty()
         with anim_placeholder.container():
             if lottie_thinking: st_lottie(lottie_thinking, height=150, key="loading_pdf")
-            st.markdown("<h5 style='text-align:center; color:#00E676;'>Mengekstrak dan membaca dokumen...</h5>", unsafe_allow_html=True)
+            st.markdown("<h5 style='text-align:center; color:#00E676;'>Extracting and reading document...</h5>", unsafe_allow_html=True)
             
         try:
             pdf_reader = PdfReader(uploaded_file)
-            teks_dokumen = ""
-            kata_kunci = ["laba", "pendapatan", "risiko", "prospek", "aset", "liabilitas", "rugi"]
-            halaman_ditemukan = 0
+            document_text = ""
+            keywords = ["profit", "revenue", "income", "risk", "prospect", "asset", "liability", "loss"]
+            pages_found = 0
             
             for i, page in enumerate(pdf_reader.pages):
-                teks_halaman = page.extract_text()
-                if teks_halaman and any(k in teks_halaman.lower() for k in kata_kunci):
-                    teks_dokumen += f"--- HALAMAN {i+1} ---\n{teks_halaman}\n\n"
-                    halaman_ditemukan += 1
-                if halaman_ditemukan >= 15: break
+                page_text = page.extract_text()
+                if page_text and any(k in page_text.lower() for k in keywords):
+                    document_text += f"--- PAGE {i+1} ---\n{page_text}\n\n"
+                    pages_found += 1
+                if pages_found >= 15: break
             
-            # Logika Rencana B (Fallback)
-            if halaman_ditemukan == 0:
+            # Plan B Logic (Fallback)
+            if pages_found == 0:
                 anim_placeholder.empty()
-                st.warning("⚠️ Dokumen tidak menggunakan format keuangan standar. Beralih ke Mode Ekstraksi Umum...")
+                st.warning("⚠️ Document does not use standard financial formatting. Switching to General Extraction Mode...")
                 
                 total_pages = len(pdf_reader.pages)
-                sampel_awal = list(range(min(3, total_pages)))
-                sampel_tengah = list(range(max(3, total_pages//2), min(total_pages, (total_pages//2) + 3)))
+                early_sample = list(range(min(3, total_pages)))
+                mid_sample = list(range(max(3, total_pages//2), min(total_pages, (total_pages//2) + 3)))
                 
-                for i in sorted(list(set(sampel_awal + sampel_tengah))):
-                    teks_dokumen += f"--- HALAMAN {i+1} ---\n{pdf_reader.pages[i].extract_text()}\n\n"
+                for i in sorted(list(set(early_sample + mid_sample))):
+                    document_text += f"--- PAGE {i+1} ---\n{pdf_reader.pages[i].extract_text()}\n\n"
                 
-                prompt_aktif = ChatPromptTemplate.from_messages([
-                    ("system", """Kamu Analis Dokumen Profesional. Buat ringkasan untuk menjawab pertanyaan.
-                    ATURAN KRITIS: Jika teks sama sekali tidak membahas perusahaan/keuangan/ekonomi, TOLAK dengan menjawab: "Dokumen yang diberikan tidak sesuai. Mohon unggah dokumen terkait finansial." """),
-                    ("user", "Dokumen:\n{dokumen}\n\nPertanyaan: {pertanyaan}")
+                active_prompt = ChatPromptTemplate.from_messages([
+                    ("system", """You are a Professional Document Analyst. Create a summary to answer the question.
+                    CRITICAL RULE: If the text does not discuss business/finance/economics at all, REJECT by answering: "The provided document is inappropriate. Please upload a financially related document." """),
+                    ("user", "Document:\n{document}\n\nQuestion: {question}")
                 ])
             else:
                 anim_placeholder.empty()
-                st.success(f"Berhasil mengekstrak {halaman_ditemukan} halaman krusial.")
-                prompt_aktif = ChatPromptTemplate.from_messages([
-                    ("system", "Kamu Auditor Keuangan Senior. Jawab pertanyaan pengguna dengan akurat berdasarkan teks lampiran. Gunakan bullet points."),
-                    ("user", "Dokumen:\n{dokumen}\n\nPertanyaan: {pertanyaan}")
+                st.success(f"Successfully extracted {pages_found} crucial pages.")
+                active_prompt = ChatPromptTemplate.from_messages([
+                    ("system", "You are a Senior Financial Auditor. Answer the user's question accurately based on the attached text. Use bullet points."),
+                    ("user", "Document:\n{document}\n\nQuestion: {question}")
                 ])
                 
-            # Pemanggilan AI
-            jawaban_pdf = (prompt_aktif | llm).invoke({"dokumen": teks_dokumen, "pertanyaan": pertanyaan_user})
+            # AI Invocation
+            pdf_response = (active_prompt | llm).invoke({"document": document_text, "question": user_question})
             
             # Output Card
-            st.markdown(f'<div class="ai-card"><h4>🤖 Jawaban Auditor FintechAI</h4>{jawaban_pdf.content}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="ai-card"><h4>🤖 FintechAI Auditor Response</h4>{pdf_response.content}</div>', unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
-            st.download_button("📥 Unduh Hasil Bedah PDF (.txt)", jawaban_pdf.content, "Hasil_Bedah_PDF.txt", mime="text/plain")
+            st.download_button("📥 Download PDF Breakdown Result (.txt)", pdf_response.content, "PDF_Breakdown_Result.txt", mime="text/plain")
 
         except Exception as e:
             anim_placeholder.empty()
-            st.error(f"Terjadi kesalahan saat membaca PDF: {e}")
+            st.error(f"An error occurred while reading the PDF: {e}")
             
