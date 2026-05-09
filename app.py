@@ -306,11 +306,10 @@ elif menu_choice == "PDF Report Analyzer":
             anim_placeholder.empty()
             st.error(f"An error occurred while reading the PDF: {e}")
             
-elif menu_choice == "Portfolio Advisor":
+elif menu_choice == "Portfolio Advisor": # Menggunakan variabel bahasa Inggris Anda
     st.header("💼 AI Portfolio Advisor")
     st.markdown("Enter your current stock positions to get an objective performance analysis and personalized action plan from our AI.")
     
-    # Membungkus form dengan UI Card dari CSS sebelumnya
     st.markdown('<div class="ai-card">', unsafe_allow_html=True)
     
     with st.form("portfolio_form"):
@@ -318,16 +317,16 @@ elif menu_choice == "Portfolio Advisor":
         
         col1, col2, col3 = st.columns(3)
         with col1:
-            ticker = st.text_input("Stock Ticker (e.g., AAPL, BBCA.JK)", "AAPL")
+            ticker = st.text_input("Stock Ticker (e.g., AAPL, BBCA.JK)", "BRPT.JK")
         with col2:
-            avg_price = st.number_input("Average Buy Price", min_value=0.01, value=150.00, step=1.0)
+            avg_price = st.number_input("Average Buy Price", min_value=1.0, value=4000.0, step=10.0)
         with col3:
-            shares = st.number_input("Number of Shares", min_value=1, value=10, step=1)
+            # Labelnya diperjelas
+            shares = st.number_input("Number of Lots / Shares", min_value=1, value=5, step=1)
             
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("2. Select Your Risk Profile")
         
-        # FITUR PROFIL RISIKO (SANGAT PENTING UNTUK KONTEKS AI)
         risk_profile = st.select_slider(
             "What is your investment risk tolerance?",
             options=["Conservative (Low Risk)", "Moderate (Medium Risk)", "Aggressive (High Risk)"],
@@ -356,11 +355,17 @@ elif menu_choice == "Portfolio Advisor":
             else:
                 current_price = hist['Close'].iloc[-1]
                 
-                # Perhitungan P&L (Profit & Loss)
-                initial_capital = avg_price * shares
-                current_value = current_price * shares
+                # --- LOGIKA CERDAS MATA UANG & LOT ---
+                is_indo = ticker.endswith(".JK")
+                mata_uang = "Rp" if is_indo else "$"
+                pengali_lembar = 100 if is_indo else 1 
+                
+                total_lembar = shares * pengali_lembar
+                
+                initial_capital = avg_price * total_lembar
+                current_value = current_price * total_lembar
                 pnl_amount = current_value - initial_capital
-                pnl_percent = (pnl_amount / initial_capital) * 100
+                pnl_percent = (pnl_amount / initial_capital) * 100 if initial_capital > 0 else 0
                 
                 status = "Floating Profit" if pnl_amount > 0 else "Floating Loss"
                 
@@ -369,26 +374,28 @@ elif menu_choice == "Portfolio Advisor":
                 # TAMPILAN DASHBOARD P&L
                 st.subheader("📊 Position Summary")
                 m1, m2, m3, m4 = st.columns(4)
-                m1.metric("Current Price", f"${current_price:,.2f}")
-                m2.metric("Total Investment", f"${initial_capital:,.2f}")
-                m3.metric("Current Value", f"${current_value:,.2f}")
-                m4.metric("Unrealized P/L", f"${pnl_amount:,.2f}", f"{pnl_percent:.2f}%")
+                
+                # Format angka: Tanpa desimal (,0f) untuk Rupiah agar lebih rapi
+                m1.metric("Current Price", f"{mata_uang} {current_price:,.0f}")
+                m2.metric("Total Investment", f"{mata_uang} {initial_capital:,.0f}")
+                m3.metric("Current Value", f"{mata_uang} {current_value:,.0f}")
+                m4.metric("Unrealized P/L", f"{mata_uang} {pnl_amount:,.0f}", f"{pnl_percent:.2f}%")
                 
                 st.divider()
                 
-                # PROMPT SUPER POWERFUL (Berdasarkan Profil Risiko)
+                # PROMPT UNTUK AI
                 prompt_advisor = ChatPromptTemplate.from_messages([
                     ("system", """You are a highly skilled, objective Professional Financial Advisor. 
                     Analyze the user's current stock position. 
                     CRITICAL RULES:
-                    1. You MUST tailor your advice based on the user's Risk Profile. (e.g., recommend Cut Loss sooner for Conservative, or Hold/Average Down for Aggressive if fundamentals allow).
+                    1. You MUST tailor your advice based on the user's Risk Profile.
                     2. Clearly state whether the user should HOLD, CUT LOSS, AVERAGE DOWN, or TAKE PROFIT.
-                    3. Provide a brief psychological and technical rationale for your advice.
+                    3. Provide a brief psychological and technical rationale.
                     4. Answer in professional English using bullet points."""),
                     ("user", f"""
                     Asset: {ticker}
-                    User's Average Price: ${avg_price:,.2f}
-                    Current Market Price: ${current_price:,.2f}
+                    User's Average Price: {mata_uang} {avg_price:,.0f}
+                    Current Market Price: {mata_uang} {current_price:,.0f}
                     Position Status: {status} ({pnl_percent:.2f}%)
                     User's Risk Profile: {risk_profile}
                     
@@ -398,13 +405,16 @@ elif menu_choice == "Portfolio Advisor":
                 # Panggil LLM Qwen di Server AMD
                 jawaban_advisor = (prompt_advisor | llm).invoke({})
                 
-                # Tampilkan Jawaban di dalam CSS Card
+                # --- BAGIAN INI YANG MEMUNCULKAN TEKS AI ---
                 st.markdown(f'<div class="ai-card"><h4>🤖 Advisor\'s Verdict</h4>{jawaban_advisor.content}</div>', unsafe_allow_html=True)
                 
-                # Opsi Download
                 st.markdown("<br>", unsafe_allow_html=True)
                 st.download_button("📥 Download Advice (.txt)", jawaban_advisor.content, f"Portfolio_Advice_{ticker}.txt", mime="text/plain")
 
+        except Exception as e:
+            anim_placeholder.empty()
+            # Pesan error diubah agar lebih jelas
+            st.error(f"⚠️ Failed to generate AI analysis. Ensure your AMD server is powered ON! (Error details: {e})")
         except Exception as e:
             anim_placeholder.empty()
             st.error(f"Failed to analyze portfolio. Error: {e}")
