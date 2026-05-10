@@ -329,9 +329,11 @@ elif menu_choice == "Portfolio Advisor":
                     Analyze the user's current stock position. 
                     CRITICAL RULES:
                     1. You MUST tailor your advice based on the user's Risk Profile.
-                    2. Clearly state whether the user should HOLD, CUT LOSS, AVERAGE DOWN, or TAKE PROFIT.
-                    3. Provide a brief psychological and technical rationale.
-                    4. Answer in professional English using bullet points."""),
+                    2. IF Position Status is 'Floating Loss' (minus percentage), you MUST NEVER recommend 'TAKE PROFIT'. You can only recommend HOLD, AVERAGE DOWN, or CUT LOSS.
+                    3. IF Position Status is 'Floating Profit' (plus percentage), you MUST NEVER recommend 'CUT LOSS'.
+                    4. Clearly state your final verdict: HOLD, CUT LOSS, AVERAGE DOWN, or TAKE PROFIT.
+                    5. Provide a brief psychological and technical rationale.
+                    6. Answer in professional English using bullet points."""),
                     ("user", f"""
                     Asset: {ticker}
                     User's Average Price: {mata_uang} {avg_price:,.0f}
