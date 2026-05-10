@@ -261,7 +261,6 @@ elif menu_choice == "Portfolio Advisor":
     
     with st.form("portfolio_form"):
         st.subheader("1. Enter Your Position")
-        
         col1, col2, col3 = st.columns(3)
         with col1:
             ticker = st.text_input("Stock Ticker (e.g., AAPL, BRPT.JK)", "BRPT.JK")
@@ -272,7 +271,6 @@ elif menu_choice == "Portfolio Advisor":
             
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("2. Select Your Risk Profile")
-        
         risk_profile = st.select_slider(
             "What is your investment risk tolerance?",
             options=["Conservative (Low Risk)", "Moderate (Medium Risk)", "Aggressive (High Risk)"],
@@ -292,19 +290,30 @@ elif menu_choice == "Portfolio Advisor":
             
         try:
             saham = yf.Ticker(ticker)
-            hist = saham.history(period="1d")
+            hist_1d = saham.history(period="1d") # Untuk harga hari ini
+            hist_max = saham.history(period="max") # Untuk cek All Time High/Low
             
-            if hist.empty:
+            if hist_1d.empty or hist_max.empty:
                 anim_placeholder.empty()
                 st.error("Ticker not found. Please check the symbol.")
             else:
-                current_price = hist['Close'].iloc[-1]
+                current_price = hist_1d['Close'].iloc[-1]
+                
+                # Cek All-Time High dan All-Time Low
+                ath = hist_max['High'].max()
+                atl = hist_max['Low'].min()
                 
                 is_indo = ticker.endswith(".JK")
                 mata_uang = "Rp" if is_indo else "$"
                 pengali_lembar = 100 if is_indo else 1 
-                total_lembar = shares * pengali_lembar
                 
+                anim_placeholder.empty() 
+                
+                # --- VALIDASI HARGA HISTORIS ---
+                if avg_price > ath or avg_price < atl:
+                    st.warning(f"⚠️ **Anomaly Detected:** The average price you entered ({mata_uang} {avg_price:,.0f}) is outside historical bounds. The All-Time High for {ticker} is {mata_uang} {ath:,.0f} and the All-Time Low is {mata_uang} {atl:,.0f}. The analysis will continue, but please verify your input.")
+                
+                total_lembar = shares * pengali_lembar
                 initial_capital = avg_price * total_lembar
                 current_value = current_price * total_lembar
                 pnl_amount = current_value - initial_capital
@@ -312,11 +321,8 @@ elif menu_choice == "Portfolio Advisor":
                 
                 status = "Floating Profit" if pnl_amount > 0 else "Floating Loss"
                 
-                anim_placeholder.empty() 
-                
                 st.subheader("📊 Position Summary")
                 m1, m2, m3, m4 = st.columns(4)
-                
                 m1.metric("Current Price", f"{mata_uang} {current_price:,.0f}")
                 m2.metric("Total Investment", f"{mata_uang} {initial_capital:,.0f}")
                 m3.metric("Current Value", f"{mata_uang} {current_value:,.0f}")
