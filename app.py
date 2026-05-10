@@ -8,7 +8,7 @@ from streamlit_option_menu import option_menu
 from streamlit_lottie import st_lottie
 import requests
 
-# --- 1. PENGATURAN HALAMAN (WAJIB PALING ATAS) ---
+# --- 1. PENGATURAN HALAMAN---
 st.set_page_config(page_title="FintechAI - Dashboard", page_icon="📈", layout="wide", initial_sidebar_state="expanded")
 
 # --- 2. FUNGSI UNTUK ANIMASI & MARKET DATA ---
@@ -42,7 +42,7 @@ def get_global_market_pulse():
 @st.cache_resource
 def init_llm():
     return ChatOpenAI(
-        base_url="http://134.199.201.164:8000/v1", # PASTIKAN IP SERVER AMD KAMU BENAR
+        base_url="http://134.199.195.117:8000/v1", # PASTIKAN IP SERVER AMD KAMU BENAR
         api_key="kosong", 
         model="Qwen/Qwen2.5-1.5B-Instruct",
         max_tokens=1200
